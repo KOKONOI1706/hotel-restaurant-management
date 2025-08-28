@@ -1,0 +1,54 @@
+{
+  "name": "hotel-restaurant-management",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Complete hotel and restaurant management system",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "keywords": [
+    "hotel",
+    "restaurant",
+    "management",
+    "nextjs",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7",
+    "autoprefixer": "^10.4.21",
+    "bcryptjs": "^3.0.2",
+    "date-fns": "^4.1.0",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "^15.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.541.0",
+    "mongodb": "^6.0.0",
+    "mongoose": "^8.18.0",
+    "next": "15.0.3",
+    "next-auth": "^4.24.11",
+    "postcss": "^8.5.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "recharts": "^3.1.2",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.11",
+    "@types/react-dom": "^19.1.7"
+  }
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, FunnelIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
 interface Room {
   _id: string;
@@ -44,6 +44,7 @@ export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -80,6 +81,34 @@ export default function RoomsPage() {
       setError('Lỗi mạng');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSyncAllRooms = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/rooms/sync-status', {
+        method: 'POST',
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Refresh danh sách phòng sau khi sync
+        await fetchRooms();
+        
+        if (data.updatedRooms && data.updatedRooms.length > 0) {
+          alert(`Đã đồng bộ thành công ${data.updatedRooms.length} phòng!`);
+        } else {
+          alert('Tất cả phòng đã được đồng bộ đúng!');
+        }
+      } else {
+        setError(data.error || 'Lỗi khi đồng bộ trạng thái phòng');
+      }
+    } catch (error) {
+      setError('Lỗi mạng khi đồng bộ');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -246,13 +275,27 @@ export default function RoomsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Quản Lý Phòng</h1>
-        <button
-          onClick={handleNewRoom}
-          className="btn btn-primary flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Thêm Phòng Mới
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleSyncAllRooms}
+            disabled={isSyncing}
+            className="btn btn-secondary flex items-center"
+          >
+            {isSyncing ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+            ) : (
+              <ArrowPathIcon className="h-5 w-5 mr-2" />
+            )}
+            {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ trạng thái'}
+          </button>
+          <button
+            onClick={handleNewRoom}
+            className="btn btn-primary flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Thêm Phòng Mới
+          </button>
+        </div>
       </div>
 
       {/* Filters */}

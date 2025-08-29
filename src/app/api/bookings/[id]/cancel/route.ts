@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { Booking, Room } from '@/lib/models';
+import { Booking } from '@/lib/models';
 import { syncRoomStatus } from '@/lib/syncRoomStatus';
 
 export async function POST(
@@ -10,6 +10,9 @@ export async function POST(
   try {
     await connectDB();
     
+    const body = await request.json();
+    const { reason = '' } = body;
+    
     const booking = await Booking.findById(params.id);
     if (!booking) {
       return NextResponse.json(
@@ -18,32 +21,33 @@ export async function POST(
       );
     }
     
-    if (booking.status !== 'confirmed') {
+    if (booking.status === 'cancelled' || booking.status === 'checked-out') {
       return NextResponse.json(
-        { success: false, message: 'Booking không ở trạng thái có thể check-in' },
+        { success: false, message: 'Booking đã được hủy hoặc đã check-out' },
         { status: 400 }
       );
     }
     
-    // Cập nhật trạng thái check-in
+    // Cập nhật trạng thái hủy
     await Booking.findByIdAndUpdate(params.id, {
-      status: 'checked-in',
-      actualCheckIn: new Date(),
+      status: 'cancelled',
+      cancelReason: reason,
+      cancelledAt: new Date(),
       updatedAt: new Date()
     });
     
-    // Tự động đồng bộ trạng thái phòng
+    // Tự động đồng bộ trạng thái phòng (sẽ thành available nếu không có booking khác)
     await syncRoomStatus(booking.roomId.toString());
     
     return NextResponse.json({
       success: true,
-      message: 'Check-in thành công'
+      message: 'Hủy booking thành công'
     });
     
   } catch (error) {
-    console.error('Check-in error:', error);
+    console.error('Cancel booking error:', error);
     return NextResponse.json(
-      { success: false, message: 'Lỗi khi check-in' },
+      { success: false, message: 'Lỗi khi hủy booking' },
       { status: 500 }
     );
   }

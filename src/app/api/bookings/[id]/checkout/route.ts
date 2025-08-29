@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import { Booking, Room } from '@/lib/models';
+import { syncRoomStatus } from '@/lib/syncRoomStatus';
 
 export async function POST(
   request: NextRequest,
@@ -116,8 +117,8 @@ export async function POST(
       updatedAt: new Date()
     });
     
-    // Cập nhật trạng thái phòng
-    await Room.findByIdAndUpdate(booking.roomId, { status: 'cleaning' });
+    // Tự động đồng bộ trạng thái phòng
+    await syncRoomStatus(booking.roomId.toString());
     
     return NextResponse.json({
       success: true,

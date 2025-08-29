@@ -137,12 +137,14 @@ export default function RoomsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         alert(data.message);
         fetchRooms();
       } else {
-        alert('Không thể cập nhật trạng thái phòng');
+        // Display specific error message from API
+        alert(data.error || 'Không thể cập nhật trạng thái phòng');
       }
     } catch (error) {
       alert('Lỗi khi cập nhật trạng thái phòng');
@@ -339,7 +341,8 @@ export default function RoomsPage() {
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(room.status)}`}>
                     {getStatusText(room.status)}
                   </span>
-                  {room.status === 'cleaning' && (
+                  {/* Only show status change buttons if room doesn't have active guests */}
+                  {room.status === 'cleaning' && !room.currentBooking && (
                     <button
                       onClick={() => handleStatusChange(room._id, 'available')}
                       className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
@@ -348,7 +351,17 @@ export default function RoomsPage() {
                       ✓ Xong
                     </button>
                   )}
-                  {room.status === 'occupied' && (
+                  {/* Show disabled button with explanation when room has guests */}
+                  {room.status === 'occupied' && room.currentBooking && (
+                    <span 
+                      className="px-2 py-1 bg-gray-300 text-gray-500 text-xs rounded cursor-not-allowed"
+                      title="Không thể thay đổi trạng thái khi phòng đang có khách. Vui lòng thực hiện check-out trước."
+                    >
+                      🔒 Có khách
+                    </span>
+                  )}
+                  {/* Allow cleaning transition only after checkout */}
+                  {room.status === 'occupied' && !room.currentBooking && (
                     <button
                       onClick={() => handleStatusChange(room._id, 'cleaning')}
                       className="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600"

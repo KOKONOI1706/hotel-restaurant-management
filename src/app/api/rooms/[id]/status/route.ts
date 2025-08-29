@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { Room } from '@/lib/models';
+import { Room, Booking } from '@/lib/models';
 
 // PUT /api/rooms/[id]/status - Update room status
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -25,18 +25,57 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const room = await Room.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true, runValidators: true }
-    );
-
-    if (!room) {
+    // Get current room info
+    const currentRoom = await Room.findById(id);
+    if (!currentRoom) {
       return NextResponse.json(
         { success: false, error: 'Room not found' },
         { status: 404 }
       );
     }
+
+    // Check if room has active bookings (checked-in guests)
+    const activeBooking = await Booking.findOne({
+      roomId: id,
+      status: 'checked-in'
+    });
+
+    // If room currently has guests (occupied or has active booking), restrict status changes
+    if (activeBooking || currentRoom.status === 'occupied') {
+      // Only allow certain status changes when room has guests
+      const allowedChangesWithGuests = ['occupied']; // Can only keep as occupied
+      
+      if (!allowedChangesWithGuests.includes(status)) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Không thể thay đổi trạng thái phòng ${currentRoom.roomNumber} khi đang có khách. Vui lòng thực hiện check-out trước.`,
+            currentStatus: currentRoom.status,
+            hasActiveBooking: !!activeBooking
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // If changing TO occupied status, ensure there's an active booking
+    if (status === 'occupied') {
+      if (!activeBooking) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: `Không thể đặt phòng ${currentRoom.roomNumber} thành "Có khách" khi chưa có booking nào được check-in.`
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    const room = await Room.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    );
 
     return NextResponse.json({
       success: true,

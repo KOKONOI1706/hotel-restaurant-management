@@ -13,18 +13,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get email credentials from environment
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, ''); // Remove all spaces
+
+    if (!gmailUser || !gmailPassword) {
+      console.error('Missing email credentials:', { 
+        hasUser: !!gmailUser, 
+        hasPassword: !!gmailPassword 
+      });
+      return NextResponse.json(
+        { success: false, message: 'Cấu hình email chưa được thiết lập' },
+        { status: 500 }
+      );
+    }
+
     // Create nodemailer transporter (using Gmail SMTP)
-    const transporter = nodemailer.createTransporter({
+    const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.GMAIL_USER || 'suoimo4512@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD, // App password, not regular password
+        user: gmailUser,
+        pass: gmailPassword,
       },
     });
 
     // Email content
     const mailOptions = {
-      from: process.env.GMAIL_USER || 'suoimo4512@gmail.com',
+      from: gmailUser,
       to: 'suoimo4512@gmail.com',
       subject: `[Suối Mơ Resort] ${subject} - ${name}`,
       html: `

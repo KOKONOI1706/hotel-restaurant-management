@@ -1,12 +1,27 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Hotel & Restaurant Management System',
-  description: 'Complete management solution for hotels and restaurants',
+  title: 'Hotel Management System',
+  description: 'Hệ thống quản lý khách sạn và nhà hàng',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/apple-touch-icon.svg',
+    shortcut: '/favicon.ico',
+  },
+  manifest: '/site.webmanifest',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#3B82F6',
 };
 
 export default function RootLayout({

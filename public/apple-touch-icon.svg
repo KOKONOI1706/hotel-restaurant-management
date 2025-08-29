@@ -1,0 +1,38 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="180" height="180" rx="20" fill="#3B82F6"/>
+  
+  <!-- Hotel Building -->
+  <rect x="30" y="70" width="120" height="80" fill="white" rx="6"/>
+  
+  <!-- Windows -->
+  <rect x="45" y="85" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="63" y="85" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="81" y="85" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="99" y="85" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="117" y="85" width="12" height="12" fill="#3B82F6" rx="2"/>
+  
+  <rect x="45" y="103" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="63" y="103" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="81" y="103" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="99" y="103" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="117" y="103" width="12" height="12" fill="#3B82F6" rx="2"/>
+  
+  <rect x="45" y="121" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="63" y="121" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="81" y="121" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="99" y="121" width="12" height="12" fill="#3B82F6" rx="2"/>
+  <rect x="117" y="121" width="12" height="12" fill="#3B82F6" rx="2"/>
+  
+  <!-- Door -->
+  <rect x="81" y="130" width="18" height="20" fill="#EF4444" rx="2"/>
+  
+  <!-- Roof -->
+  <polygon points="30,70 90,35 150,70" fill="#EF4444"/>
+  
+  <!-- Chimney -->
+  <rect x="120" y="45" width="8" height="25" fill="#6B7280" rx="2"/>
+  
+  <!-- Hotel Text -->
+  <text x="90" y="170" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">HOTEL</text>
+</svg>

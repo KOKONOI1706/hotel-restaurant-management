@@ -1047,10 +1047,10 @@ export default function CustomerBookingPage() {
               Hotline: 0399 13 5959
             </a>
             <a 
-              href="mailto:booking@suoimoresort.com"
+              href="mailto:suoimo4512@gmail.com"
               className="flex items-center justify-center border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
             >
-              Email: booking@suoimoresort.com
+              Email: suoimo4512@gmail.com
             </a>
           </div>
         </div>

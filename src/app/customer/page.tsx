@@ -381,7 +381,7 @@ export default function CustomerHomePage() {
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <MapPinIcon className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-400">123 Đường Suối Mơ, Đà Lạt</span>
+                  <span className="text-gray-400">Suối Mơ, Khánh An, U Minh, Cà Mau</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <PhoneIcon className="h-5 w-5 text-gray-400" />
@@ -389,7 +389,7 @@ export default function CustomerHomePage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-400">info@suoimoresort.com</span>
+                  <span className="text-gray-400">suoimo4512@gmail.com</span>
                 </div>
               </div>
             </div>

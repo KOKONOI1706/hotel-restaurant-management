@@ -469,10 +469,10 @@ export default function CustomerServicesPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
-              href="tel:+842631234567"
+              href="tel:+84399135959"
               className="bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors"
             >
-              Hotline: 0263 123 4567
+              Hotline: 0399 13 5959
             </a>
             <Link 
               href="/customer/contact"

@@ -546,10 +546,10 @@ export default function CustomerRoomsPage() {
               Đặt phòng ngay
             </Link>
             <a 
-              href="tel:+842631234567"
+              href="tel:+84399135959"
               className="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-blue-600 transition-all"
             >
-              Hotline: 0263 123 4567
+              Hotline: 0399 13 5959
             </a>
           </div>
         </div>

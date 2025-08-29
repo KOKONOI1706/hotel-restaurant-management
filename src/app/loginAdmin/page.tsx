@@ -138,14 +138,6 @@ export default function AdminLoginPage() {
               {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập quản trị'}
             </button>
           </div>
-
-          <div className="text-center text-sm text-gray-600 bg-slate-50 p-4 rounded-lg">
-            <p className="font-medium mb-2">Tài khoản demo:</p>
-            <div className="space-y-1">
-              <p><span className="font-semibold text-slate-700">Quản trị viên:</span> admin / admin123</p>
-              <p><span className="font-semibold text-slate-700">Nhân viên:</span> staff / staff123</p>
-            </div>
-          </div>
         </form>
       </div>
     </div>

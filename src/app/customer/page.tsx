@@ -395,10 +395,16 @@ export default function CustomerHomePage() {
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-12 pt-8 text-center">
-            <p className="text-gray-400">
+          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center">
+            <p className="text-gray-400 mb-4 sm:mb-0">
               © 2025 Suối Mơ Resort. Tất cả quyền được bảo lưu.
             </p>
+            <Link 
+              href="/loginAdmin" 
+              className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+            >
+              Quản trị viên →
+            </Link>
           </div>
         </div>
       </footer>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seed Database - Hotel Management</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .url-input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏨 Hotel Management - Database Setup</h1>
+        
+        <div class="info">
+            <strong>Hướng dẫn:</strong><br>
+            1. Nhập URL của ứng dụng Vercel của bạn<br>
+            2. Click "Seed Database" để tạo dữ liệu mẫu<br>
+            3. Sau khi thành công, bạn sẽ có: 11 phòng, 2 user, 5 booking, 8 dịch vụ
+        </div>
+
+        <input type="text" 
+               class="url-input" 
+               id="appUrl" 
+               placeholder="https://your-app.vercel.app" 
+               value="https://hotel-restaurant-management-bznlsu4vs-nguyn-duy-congs-projects.vercel.app">
+
+        <button class="btn" onclick="seedDatabase()">🌱 Seed Database</button>
+        <button class="btn" onclick="testConnection()">🔗 Test Connection</button>
+        <button class="btn" onclick="checkRooms()">🏠 Check Rooms</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function showResult(message, type = 'loading') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+        }
+
+        async function seedDatabase() {
+            const url = document.getElementById('appUrl').value.trim();
+            if (!url) {
+                showResult('Vui lòng nhập URL ứng dụng!', 'error');
+                return;
+            }
+
+            showResult('Đang tạo dữ liệu mẫu...', 'loading');
+
+            try {
+                const response = await fetch(`${url}/api/seed`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult(`✅ Tạo dữ liệu thành công!
+
+📊 Đã tạo:
+- ${data.data.users} users (admin/admin123, staff/staff123)
+- ${data.data.rooms} rooms (các loại phòng khác nhau)
+- ${data.data.bookings} bookings (đặt phòng mẫu)
+- ${data.data.services} services (dịch vụ khách sạn)
+
+🎉 Bây giờ bạn có thể:
+1. Truy cập ${url}
+2. Đăng nhập với admin/admin123 hoặc staff/staff123
+3. Xem các phòng và booking đã tạo`, 'success');
+                } else {
+                    showResult(`❌ Lỗi tạo dữ liệu:
+${JSON.stringify(data, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Lỗi kết nối:
+${error.message}
+
+Có thể do:
+- URL không đúng
+- Ứng dụng chưa deploy
+- Lỗi CORS`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('appUrl').value.trim();
+            if (!url) {
+                showResult('Vui lòng nhập URL ứng dụng!', 'error');
+                return;
+            }
+
+            showResult('Đang kiểm tra kết nối...', 'loading');
+
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    showResult(`✅ Kết nối thành công!
+URL: ${url}
+Status: ${response.status} ${response.statusText}
+
+Ứng dụng đang hoạt động bình thường.`, 'success');
+                } else {
+                    showResult(`⚠️ Phản hồi không bình thường:
+Status: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Không thể kết nối:
+${error.message}
+
+Vui lòng kiểm tra URL và thử lại.`, 'error');
+            }
+        }
+
+        async function checkRooms() {
+            const url = document.getElementById('appUrl').value.trim();
+            if (!url) {
+                showResult('Vui lòng nhập URL ứng dụng!', 'error');
+                return;
+            }
+
+            showResult('Đang kiểm tra phòng...', 'loading');
+
+            try {
+                const response = await fetch(`${url}/api/rooms`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showResult(`✅ Tìm thấy ${data.rooms.length} phòng:
+
+${data.rooms.map(room => 
+    `🏠 ${room.roomNumber} - ${room.type} - ${room.status} - ${room.price.toLocaleString()}đ`
+).join('\n')}
+
+Nếu không có phòng nào, hãy chạy "Seed Database" trước.`, 'success');
+                } else {
+                    showResult(`❌ Lỗi lấy danh sách phòng:
+${JSON.stringify(data, null, 2)}
+
+Có thể database chưa có dữ liệu hoặc API có lỗi.`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Lỗi kiểm tra phòng:
+${error.message}`, 'error');
+            }
+        }
+
+        // Auto-populate URL if running locally
+        if (location.hostname === 'localhost') {
+            document.getElementById('appUrl').value = 'http://localhost:3000';
+        }
+    </script>
+</body>
+</html>

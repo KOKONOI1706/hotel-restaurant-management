@@ -8,14 +8,8 @@ export const metadata: Metadata = {
   title: 'Hotel Management System',
   description: 'Hệ thống quản lý khách sạn và nhà hàng',
   icons: {
-    icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: '/apple-touch-icon.svg',
-    shortcut: '/favicon.ico',
+    icon: '/icon.svg',
   },
-  manifest: '/site.webmanifest',
 };
 
 export const viewport: Viewport = {

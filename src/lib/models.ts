@@ -91,6 +91,8 @@ const BookingSchema = new Schema({
   extraCharges: { type: Number, default: 0 }, // Phí phát sinh
   checkoutNotes: { type: String }, // Ghi chú khi check-out
   usePreCalculated: { type: Boolean, default: false }, // Có sử dụng số tiền tính sẵn khi checkout không
+  useCustomAmount: { type: Boolean, default: false }, // Có sử dụng tùy chỉnh giá khi checkout không
+  customAmount: { type: Number }, // Số tiền tùy chỉnh
   realTimeCalculation: { type: Schema.Types.Mixed }, // Thông tin tính toán thời gian thực
   
   // Trạng thái

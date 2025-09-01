@@ -11,7 +11,13 @@ export async function POST(
     await connectDB();
     
     const body = await request.json();
-    const { extraCharges = 0, notes = '', usePreCalculated = false } = body;
+    const { 
+      extraCharges = 0, 
+      notes = '', 
+      usePreCalculated = false, 
+      useCustomAmount = false, 
+      customAmount = 0 
+    } = body;
     
     const booking = await Booking.findById(params.id).populate('roomId');
     if (!booking) {
@@ -31,8 +37,12 @@ export async function POST(
     let baseAmount = booking.totalAmount; // Mặc định dùng số tiền tính sẵn
     let realTimeCalculation = null;
     
-    // Nếu không sử dụng số tiền tính sẵn, tính theo thời gian thực
-    if (!usePreCalculated) {
+    // Nếu sử dụng tùy chỉnh giá
+    if (useCustomAmount) {
+      baseAmount = customAmount;
+    }
+    // Nếu không sử dụng số tiền tính sẵn và không tùy chỉnh, tính theo thời gian thực
+    else if (!usePreCalculated) {
       try {
         // Tính tiền theo thời gian thực
         const room = booking.roomId;
@@ -101,18 +111,21 @@ export async function POST(
       }
     }
     
-    // Tính tổng số tiền (bao gồm phí phát sinh)
-    const finalAmount = baseAmount + extraCharges;
+    // Tính tổng số tiền
+    // Nếu dùng tùy chỉnh giá, không cộng thêm phí phát sinh (đã bao gồm trong giá tùy chỉnh)
+    const finalAmount = useCustomAmount ? customAmount : (baseAmount + extraCharges);
     
     // Cập nhật trạng thái check-out
     await Booking.findByIdAndUpdate(params.id, {
       status: 'checked-out',
       actualCheckOut: new Date(),
       finalAmount: finalAmount,
-      baseAmount: baseAmount, // Lưu số tiền cơ sở (theo thời gian thực hoặc tính sẵn)
-      extraCharges: extraCharges,
+      baseAmount: baseAmount, // Lưu số tiền cơ sở (theo thời gian thực hoặc tính sẵn hoặc tùy chỉnh)
+      extraCharges: useCustomAmount ? 0 : extraCharges, // Không lưu phí phát sinh khi dùng tùy chỉnh giá
       checkoutNotes: notes,
       usePreCalculated: usePreCalculated, // Lưu thông tin có dùng số tiền tính sẵn không
+      useCustomAmount: useCustomAmount, // Lưu thông tin có dùng tùy chỉnh giá không
+      customAmount: useCustomAmount ? customAmount : undefined, // Lưu số tiền tùy chỉnh
       realTimeCalculation: realTimeCalculation, // Lưu thông tin tính toán thời gian thực
       updatedAt: new Date()
     });
@@ -126,11 +139,13 @@ export async function POST(
       data: {
         finalAmount: finalAmount,
         baseAmount: baseAmount,
-        extraCharges: extraCharges,
+        extraCharges: useCustomAmount ? 0 : extraCharges,
         usePreCalculated: usePreCalculated,
+        useCustomAmount: useCustomAmount,
+        customAmount: useCustomAmount ? customAmount : undefined,
         realTimeCalculation: realTimeCalculation,
         preCalculatedAmount: booking.totalAmount,
-        difference: baseAmount - booking.totalAmount
+        difference: useCustomAmount ? customAmount - booking.totalAmount : baseAmount - booking.totalAmount
       }
     });
     

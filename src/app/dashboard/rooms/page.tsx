@@ -69,7 +69,8 @@ export default function RoomsPage() {
 
   const fetchRooms = async () => {
     try {
-      const response = await fetch('/api/rooms');
+      // Lấy tất cả phòng mà không giới hạn pagination
+      const response = await fetch('/api/rooms?all=true');
       const data = await response.json();
 
       if (data.success) {

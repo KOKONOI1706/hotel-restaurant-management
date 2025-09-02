@@ -130,36 +130,12 @@ export default function CustomerServicesPage() {
     }
   };
 
-  // Mock reviews data
+  // Fetch reviews from database when available
   useEffect(() => {
     if (isClient) {
-      const mockReviews: Review[] = [
-        {
-          id: '1',
-          customerName: 'Nguyễn Thị Lan',
-          rating: 5,
-          comment: 'Dịch vụ tuyệt vời, nhân viên chu đáo và chuyên nghiệp.',
-          date: '2025-08-25',
-          serviceId: '1'
-        },
-        {
-          id: '2',
-          customerName: 'Trần Minh Đức',
-          rating: 5,
-          comment: 'Chất lượng dịch vụ rất tốt, sẽ sử dụng lại.',
-          date: '2025-08-24',
-          serviceId: '2'
-        },
-        {
-          id: '3',
-          customerName: 'Lê Hoàng Nam',
-          rating: 4,
-          comment: 'Hài lòng với dịch vụ, giá cả hợp lý.',
-          date: '2025-08-23',
-          serviceId: '3'
-        }
-      ];
-      setReviews(mockReviews);
+      // TODO: Replace with actual API call when reviews endpoint is implemented
+      // For now, don't show mock reviews
+      setReviews([]);
     }
   }, [isClient]);
 

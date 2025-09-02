@@ -10,7 +10,8 @@ export const GET = async (request: NextRequest) => { // Temporarily removed with
     const status = searchParams.get('status');
     const type = searchParams.get('type');
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const limit = parseInt(searchParams.get('limit') || '50'); // Tăng limit mặc định từ 10 lên 50
+    const showAll = searchParams.get('all') === 'true'; // Tùy chọn hiển thị tất cả
 
     await connectDB();
     
@@ -22,10 +23,14 @@ export const GET = async (request: NextRequest) => { // Temporarily removed with
     if (type) filter.type = type;
 
     // Get rooms with pagination and current booking info
-    const rooms = await Room.find(filter)
-      .sort({ roomNumber: 1 })
-      .skip(skip)
-      .limit(limit);
+    let roomsQuery = Room.find(filter).sort({ roomNumber: 1 });
+    
+    // Nếu không yêu cầu tất cả thì áp dụng pagination
+    if (!showAll) {
+      roomsQuery = roomsQuery.skip(skip).limit(limit);
+    }
+    
+    const rooms = await roomsQuery;
 
     // For occupied rooms, get current booking info
     const roomsWithBookings = await Promise.all(
@@ -50,16 +55,17 @@ export const GET = async (request: NextRequest) => { // Temporarily removed with
     );
 
     const totalRooms = await Room.countDocuments(filter);
-    const totalPages = Math.ceil(totalRooms / limit);
+    const totalPages = showAll ? 1 : Math.ceil(totalRooms / limit);
 
     return NextResponse.json({
       success: true,
       rooms: roomsWithBookings,
       pagination: {
-        page,
-        limit,
+        page: showAll ? 1 : page,
+        limit: showAll ? totalRooms : limit,
         totalPages,
         totalRooms,
+        showAll,
       },
     });
   } catch (error) {

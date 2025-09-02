@@ -29,7 +29,8 @@ const navigation = [
   { name: 'Booking', href: '/dashboard/bookings', icon: CalendarDaysIcon },
   { name: 'Dịch vụ', href: '/dashboard/services', icon: CogIcon },
   { name: 'Hóa đơn', href: '/dashboard/invoices', icon: DocumentTextIcon },
-  { name: 'Thông tin lưu trú', href: '/dashboard/notifications', icon: InformationCircleIcon },
+  { name: 'Thông báo lưu trú', href: '/dashboard/accommodation-notifications', icon: BellIcon },
+  { name: 'Quản lý khách thuê', href: '/dashboard/notifications', icon: InformationCircleIcon },
   { name: 'Báo cáo', href: '/dashboard/reports', icon: ChartBarIcon },
 ];
 

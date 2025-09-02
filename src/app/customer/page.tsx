@@ -40,35 +40,11 @@ export default function CustomerHomePage() {
     setIsClient(true);
   }, []);
 
-  // Mock reviews data
+  // Fetch real reviews data when available
   useEffect(() => {
-    const mockReviews: Review[] = [
-      {
-        id: '1',
-        customerName: 'Nguyễn Minh Anh',
-        rating: 5,
-        comment: 'Khách sạn tuyệt vời! Dịch vụ chu đáo, phòng ốc sạch sẽ và thoáng mát. Sẽ quay lại lần sau.',
-        date: '2025-08-25',
-        avatar: '👩‍💼'
-      },
-      {
-        id: '2',
-        customerName: 'Trần Đức Huy',
-        rating: 5,
-        comment: 'Nghỉ dưỡng tại đây rất thư giãn. Cảnh quan đẹp, không khí trong lành. Nhân viên thân thiện.',
-        date: '2025-08-20',
-        avatar: '👨‍💼'
-      },
-      {
-        id: '3',
-        customerName: 'Lê Thị Mai',
-        rating: 4,
-        comment: 'Phòng ốc sạch sẽ, tiện nghi đầy đủ. Bữa sáng ngon miệng. Gần các điểm du lịch.',
-        date: '2025-08-15',
-        avatar: '👩‍🦰'
-      }
-    ];
-    setReviews(mockReviews);
+    // TODO: Replace with actual API call when reviews endpoint is implemented
+    // For now, don't show mock reviews
+    setReviews([]);
   }, []);
 
   // Auto-rotate hero images

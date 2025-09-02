@@ -5,7 +5,6 @@ import AccommodationNotificationModal from './AccommodationNotificationModal';
 
 interface Booking {
   _id: string;
-  roomNumber: string;
   representativeName: string;
   representativePhone: string;
   checkInDate: string;
@@ -37,7 +36,7 @@ export default function AccommodationNotificationList() {
       const result = await response.json();
       
       if (result.success) {
-        setBookings(result.data || []);
+        setBookings(result.bookings || []); // Changed from result.data to result.bookings
       }
     } catch (error) {
       console.error('Error loading bookings:', error);
@@ -132,7 +131,7 @@ export default function AccommodationNotificationList() {
           <div key={booking._id} className="bg-white rounded-lg shadow p-4 border">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <h3 className="font-semibold text-lg">Phòng {booking.roomNumber}</h3>
+                <h3 className="font-semibold text-lg">Phòng {booking.roomId?.roomNumber || 'N/A'}</h3>
                 <p className="text-gray-600">{booking.representativeName || booking.customerName}</p>
                 <p className="text-sm text-gray-500">{booking.representativePhone}</p>
               </div>

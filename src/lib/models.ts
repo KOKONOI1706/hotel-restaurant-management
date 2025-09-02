@@ -33,7 +33,9 @@ const GuestSchema = new Schema({
   name: { type: String, required: true },
   cccd: { type: String, default: 'Chưa cập nhật' },
   phone: { type: String },
-  email: { type: String }
+  email: { type: String },
+  dateOfBirth: { type: String }, // Ngày sinh
+  address: { type: String } // Địa chỉ
 });
 
 // Booking Schema
@@ -67,6 +69,8 @@ const BookingSchema = new Schema({
     required: true
   },
   representativeEmail: { type: String },
+  representativeDateOfBirth: { type: String }, // Ngày sinh người đại diện
+  representativeAddress: { type: String }, // Địa chỉ người đại diện
   
   // Thông tin công ty (nếu có)
   companyName: { type: String },
@@ -95,6 +99,21 @@ const BookingSchema = new Schema({
   customAmount: { type: Number }, // Số tiền tùy chỉnh
   realTimeCalculation: { type: Schema.Types.Mixed }, // Thông tin tính toán thời gian thực
   
+  // Thông báo lưu trú
+  accommodationNotificationSent: { type: Boolean, default: false }, // Đã gửi thông báo lưu trú chưa
+  accommodationNotificationDate: { type: Date }, // Ngày gửi thông báo lưu trú
+  accommodationNotificationStatus: { 
+    type: String, 
+    enum: ['pending', 'completed', 'cancelled'], 
+    default: 'pending' 
+  }, // Trạng thái thông báo lưu trú
+  accommodationNotificationId: { type: String }, // Mã số thông báo từ Cổng dịch vụ công
+  guestRegistrations: [{ type: Schema.Types.Mixed }], // Thông tin đăng ký khách lưu trú
+  
+  // Trạng thái gửi hồ sơ lên portal
+  submittedToPortal: { type: Boolean, default: false }, // Đã gửi hồ sơ lên dichvucong.gov.vn chưa
+  portalSubmissionDate: { type: Date }, // Ngày gửi hồ sơ lên portal
+  
   // Trạng thái
   status: { 
     type: String, 
@@ -121,14 +140,36 @@ const ServiceSchema = new Schema({
 // Invoice Schema
 const InvoiceSchema = new Schema({
   bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', required: true },
-  customerId: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
+  customerId: { type: Schema.Types.ObjectId, ref: 'Customer' }, // Optional vì có thể lấy từ booking
   serviceIds: [{ type: Schema.Types.ObjectId, ref: 'Service' }],
   roomCharges: { type: Number, required: true },
   serviceCharges: { type: Number, default: 0 },
   taxes: { type: Number, default: 0 },
   totalAmount: { type: Number, required: true },
+  paidAmount: { type: Number, default: 0 },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'partial', 'refunded'], default: 'pending' },
-  paymentMethod: { type: String, enum: ['cash', 'card', 'transfer'] },
+  paymentMethod: { type: String, enum: ['cash', 'card', 'transfer', 'online'], default: 'cash' },
+  paymentDate: { type: Date },
+  paymentNotes: { type: String },
+  invoiceNumber: { type: String, unique: true },
+  dueDate: { type: Date },
+  
+  // Customer info (snapshot từ booking)
+  customerName: { type: String },
+  customerPhone: { type: String },
+  customerEmail: { type: String },
+  customerAddress: { type: String },
+  companyName: { type: String },
+  companyTaxCode: { type: String },
+  
+  // Room info (snapshot)
+  roomNumber: { type: String },
+  checkInDate: { type: Date },
+  checkOutDate: { type: Date },
+  
+  // Invoice status
+  status: { type: String, enum: ['draft', 'sent', 'paid', 'cancelled'], default: 'draft' },
+  notes: { type: String },
 }, { timestamps: true });
 
 // Export models

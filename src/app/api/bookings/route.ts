@@ -173,7 +173,12 @@ export async function POST(request: NextRequest) {
       rentalType,
       roomNumber: room.roomNumber,
       totalAmount,
-      createdBy: bookingData.createdBy || 'system'
+      createdBy: bookingData.createdBy || 'system',
+      // Map representativeIdNumber thành representativeCCCD
+      representativeCCCD: bookingData.representativeIdNumber || bookingData.representativeCCCD || 'Chưa cập nhật',
+      // Đảm bảo có thông tin ngày sinh và địa chỉ nếu được cung cấp
+      representativeDateOfBirth: bookingData.representativeDateOfBirth || '',
+      representativeAddress: bookingData.representativeAddress || ''
     };
     
     // Đảm bảo các trường bắt buộc cho booking cá nhân

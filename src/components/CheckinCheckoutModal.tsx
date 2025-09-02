@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import GuestRegistrationModal, { Guest } from './GuestRegistrationModal';
 
 interface CheckinCheckoutModalProps {
   booking: any;
@@ -18,6 +19,14 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
   const [loadingRealTime, setLoadingRealTime] = useState(false);
   const [useCustomAmount, setUseCustomAmount] = useState(false);
   const [customAmount, setCustomAmount] = useState(0);
+  const [showGuestRegistration, setShowGuestRegistration] = useState(false);
+  const [guestRegistrationState, setGuestRegistrationState] = useState<{
+    guests: Guest[];
+    isSubmitting: boolean;
+  }>({
+    guests: [],
+    isSubmitting: false
+  });
 
   // Tính tiền thời gian thực khi mở modal checkout
   useEffect(() => {
@@ -82,8 +91,32 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
       const data = await response.json();
 
       if (data.success) {
-        onSuccess();
-        onClose();
+        if (type === 'checkin') {
+          // Sau khi check-in thành công, khởi tạo guest registration với thông tin từ booking
+          const initialGuest = {
+            fullName: booking.representativeName,
+            dateOfBirth: booking.representativeDateOfBirth || '',
+            idNumber: booking.representativeCCCD || '',
+            idType: 'cccd' as const,
+            nationality: 'Việt Nam',
+            address: booking.representativeAddress || '',
+            phoneNumber: booking.representativePhone,
+            checkInDate: new Date().toISOString().split('T')[0],
+            estimatedCheckOutDate: booking.checkOutDate ? 
+              new Date(booking.checkOutDate).toISOString().split('T')[0] : '',
+            purpose: 'tourism' as const,
+            otherPurpose: ''
+          };
+          
+          setGuestRegistrationState({
+            guests: [initialGuest],
+            isSubmitting: false
+          });
+          setShowGuestRegistration(true);
+        } else {
+          onSuccess();
+          onClose();
+        }
       } else {
         alert(data.message || 'Có lỗi xảy ra');
       }
@@ -93,6 +126,74 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGuestRegistrationSubmit = async () => {
+    try {
+      setGuestRegistrationState(prev => ({ ...prev, isSubmitting: true }));
+      
+      const response = await fetch(`/api/bookings/${booking._id}/accommodation-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ guests: guestRegistrationState.guests }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`✅ Đã gửi thông báo lưu trú thành công!\n\nMã thông báo: ${data.data.notificationId}\nSố khách: ${data.data.guestCount}\n\n🌐 Có thể kiểm tra tại: ${data.data.portalUrl}`);
+        setShowGuestRegistration(false);
+        onSuccess();
+        onClose();
+      } else {
+        alert(data.message || 'Có lỗi khi gửi thông báo lưu trú');
+      }
+    } catch (error) {
+      console.error('Error submitting guest registration:', error);
+      alert('Có lỗi khi gửi thông báo lưu trú');
+    } finally {
+      setGuestRegistrationState(prev => ({ ...prev, isSubmitting: false }));
+    }
+  };
+
+  const handleUpdateGuest = (index: number, updatedGuest: Partial<Guest>) => {
+    setGuestRegistrationState(prev => ({
+      ...prev,
+      guests: prev.guests.map((guest, i) => 
+        i === index ? { ...guest, ...updatedGuest } : guest
+      )
+    }));
+  };
+
+  const handleAddGuest = () => {
+    const newGuest: Guest = {
+      fullName: '',
+      dateOfBirth: '',
+      idNumber: '',
+      idType: 'cccd',
+      nationality: 'Việt Nam',
+      address: '',
+      phoneNumber: '',
+      checkInDate: new Date().toISOString().split('T')[0],
+      estimatedCheckOutDate: booking.checkOutDate ? 
+        new Date(booking.checkOutDate).toISOString().split('T')[0] : '',
+      purpose: 'tourism',
+      otherPurpose: ''
+    };
+    
+    setGuestRegistrationState(prev => ({
+      ...prev,
+      guests: [...prev.guests, newGuest]
+    }));
+  };
+
+  const handleRemoveGuest = (index: number) => {
+    setGuestRegistrationState(prev => ({
+      ...prev,
+      guests: prev.guests.filter((_, i) => i !== index)
+    }));
   };
 
   const getBaseAmount = () => {
@@ -385,6 +486,24 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
           </div>
         </div>
       </div>
+
+      {/* Guest Registration Modal */}
+      {showGuestRegistration && (
+        <GuestRegistrationModal
+          isOpen={showGuestRegistration}
+          guests={guestRegistrationState.guests}
+          isSubmitting={guestRegistrationState.isSubmitting}
+          onClose={() => {
+            setShowGuestRegistration(false);
+            onSuccess();
+            onClose();
+          }}
+          onUpdateGuest={handleUpdateGuest}
+          onAddGuest={handleAddGuest}
+          onRemoveGuest={handleRemoveGuest}
+          onSubmit={handleGuestRegistrationSubmit}
+        />
+      )}
     </div>
   );
 }

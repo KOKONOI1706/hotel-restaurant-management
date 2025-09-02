@@ -16,6 +16,8 @@ interface Guest {
   phone: string;
   email: string;
   idNumber: string;
+  dateOfBirth: string; // Thêm ngày sinh
+  address: string; // Thêm địa chỉ
 }
 
 interface BookingFormProps {
@@ -38,6 +40,8 @@ export default function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
     representativePhone: '',
     representativeEmail: '',
     representativeIdNumber: '',
+    representativeDateOfBirth: '', // Thêm ngày sinh
+    representativeAddress: '', // Thêm địa chỉ
     
     // Thông tin công ty (nếu booking type là company)
     companyName: '',
@@ -93,7 +97,14 @@ export default function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
   const addGuest = () => {
     setFormData(prev => ({
       ...prev,
-      guests: [...prev.guests, { name: '', phone: '', email: '', idNumber: '' }]
+      guests: [...prev.guests, { 
+        name: '', 
+        phone: '', 
+        email: '', 
+        idNumber: '',
+        dateOfBirth: '',
+        address: ''
+      }]
     }));
   };
 
@@ -468,6 +479,31 @@ export default function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
                   />
                   {errors.representativeIdNumber && <p className="text-red-500 text-sm mt-1">{errors.representativeIdNumber}</p>}
                 </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Ngày sinh
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.representativeDateOfBirth}
+                    onChange={(e) => handleInputChange('representativeDateOfBirth', e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium mb-2">
+                    Địa chỉ thường trú
+                  </label>
+                  <textarea
+                    value={formData.representativeAddress}
+                    onChange={(e) => handleInputChange('representativeAddress', e.target.value)}
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                  />
+                </div>
               </div>
             </div>
 
@@ -557,6 +593,26 @@ export default function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
                       </div>
                       
                       <div>
+                        <label className="block text-sm font-medium mb-1">CCCD/CMND</label>
+                        <input
+                          type="text"
+                          value={guest.idNumber}
+                          onChange={(e) => updateGuest(index, 'idNumber', e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Ngày sinh</label>
+                        <input
+                          type="date"
+                          value={guest.dateOfBirth}
+                          onChange={(e) => updateGuest(index, 'dateOfBirth', e.target.value)}
+                          className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
                         <label className="block text-sm font-medium mb-1">Điện thoại</label>
                         <input
                           type="tel"
@@ -576,13 +632,14 @@ export default function BookingForm({ onSubmit, onCancel }: BookingFormProps) {
                         />
                       </div>
                       
-                      <div>
-                        <label className="block text-sm font-medium mb-1">CCCD/CMND</label>
-                        <input
-                          type="text"
-                          value={guest.idNumber}
-                          onChange={(e) => updateGuest(index, 'idNumber', e.target.value)}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium mb-1">Địa chỉ</label>
+                        <textarea
+                          value={guest.address}
+                          onChange={(e) => updateGuest(index, 'address', e.target.value)}
                           className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows={2}
+                          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
                         />
                       </div>
                     </div>

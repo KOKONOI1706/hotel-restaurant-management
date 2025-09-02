@@ -14,6 +14,8 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  BellIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -27,6 +29,7 @@ const navigation = [
   { name: 'Booking', href: '/dashboard/bookings', icon: CalendarDaysIcon },
   { name: 'Dịch vụ', href: '/dashboard/services', icon: CogIcon },
   { name: 'Hóa đơn', href: '/dashboard/invoices', icon: DocumentTextIcon },
+  { name: 'Thông tin lưu trú', href: '/dashboard/notifications', icon: InformationCircleIcon },
   { name: 'Báo cáo', href: '/dashboard/reports', icon: ChartBarIcon },
 ];
 

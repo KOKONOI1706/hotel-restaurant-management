@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { Booking, Room } from '@/lib/models';
+import { Booking, Room, Invoice } from '@/lib/models';
 import { syncRoomStatus } from '@/lib/syncRoomStatus';
 
 export async function POST(
@@ -129,6 +129,48 @@ export async function POST(
       realTimeCalculation: realTimeCalculation, // Lưu thông tin tính toán thời gian thực
       updatedAt: new Date()
     });
+    
+    // Tự động tạo Invoice
+    try {
+      // Kiểm tra đã có invoice chưa
+      const existingInvoice = await Invoice.findOne({ bookingId: params.id });
+      
+      if (!existingInvoice) {
+        // Generate unique invoice number
+        const invoiceNumber = `INV${Date.now().toString().slice(-8)}`;
+        
+        // Tạo invoice mới
+        const invoice = await Invoice.create({
+          bookingId: params.id,
+          roomCharges: finalAmount,
+          serviceCharges: 0, // TODO: Add services later
+          taxes: 0,
+          totalAmount: finalAmount,
+          paymentStatus: 'pending',
+          paymentMethod: 'cash',
+          invoiceNumber: invoiceNumber,
+          
+          // Snapshot customer info từ booking
+          customerName: booking.representativeName,
+          customerPhone: booking.representativePhone,
+          customerEmail: booking.representativeEmail,
+          companyName: booking.companyName,
+          companyTaxCode: booking.companyTaxCode,
+          
+          // Snapshot room info
+          roomNumber: booking.roomNumber,
+          checkInDate: booking.checkInDate,
+          checkOutDate: booking.actualCheckOut,
+          
+          status: 'sent' // Tự động set là đã gửi
+        });
+        
+        console.log(`Created invoice ${invoiceNumber} for booking ${params.id}`);
+      }
+    } catch (invoiceError) {
+      console.error('Error creating invoice:', invoiceError);
+      // Không fail checkout nếu tạo invoice lỗi
+    }
     
     // Tự động đồng bộ trạng thái phòng
     await syncRoomStatus(booking.roomId.toString());

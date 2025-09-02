@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import BookingForm from '@/components/BookingForm';
 import CheckinCheckoutModal from '@/components/CheckinCheckoutModal';
+import GuestRegistrationModal from '@/components/GuestRegistrationModal';
+import { useGuestRegistration } from '@/hooks/useGuestRegistration';
 
   interface Booking {
   _id: string;
@@ -12,6 +14,9 @@ import CheckinCheckoutModal from '@/components/CheckinCheckoutModal';
   roomNumber: string;
   representativeName: string;
   representativePhone: string;
+  representativeCCCD?: string; // Thêm CCCD
+  representativeDateOfBirth?: string; // Thêm ngày sinh
+  representativeAddress?: string; // Thêm địa chỉ
   companyName?: string;
   guests: any[];
   checkInDate: string;
@@ -27,6 +32,10 @@ import CheckinCheckoutModal from '@/components/CheckinCheckoutModal';
   useCustomAmount?: boolean; // Có sử dụng tùy chỉnh giá khi checkout không
   customAmount?: number; // Số tiền tùy chỉnh
   realTimeCalculation?: any; // Thông tin tính toán thời gian thực
+  accommodationNotificationSent?: boolean; // Đã gửi thông báo lưu trú chưa
+  accommodationNotificationDate?: string; // Ngày gửi thông báo lưu trú
+  accommodationNotificationId?: string; // Mã số thông báo từ Cổng dịch vụ công
+  guestRegistrations?: any[]; // Thông tin đăng ký khách lưu trú
   status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
   createdAt: string;
   actualCheckIn?: string;
@@ -42,6 +51,9 @@ export default function BookingsPage() {
     type: 'checkin' | 'checkout';
   } | null>(null);
   const [selectedBookingDetail, setSelectedBookingDetail] = useState<Booking | null>(null);
+  
+  // Guest registration hook
+  const guestRegistration = useGuestRegistration();
   
   // Filters
   const [filters, setFilters] = useState({
@@ -125,6 +137,11 @@ export default function BookingsPage() {
         minute: '2-digit' 
       });
       label = `${label} (${actualTime})`;
+      
+      // Thêm icon thông báo lưu trú nếu đã gửi
+      if (booking.accommodationNotificationSent) {
+        label += ' 🏨';
+      }
     } else if (booking && status === 'checked-out' && booking.actualCheckOut) {
       const actualTime = new Date(booking.actualCheckOut).toLocaleTimeString('vi-VN', { 
         hour: '2-digit', 
@@ -547,6 +564,9 @@ export default function BookingsPage() {
                     Trạng thái
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Lưu trú
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Thao tác
                   </th>
                 </tr>
@@ -599,6 +619,57 @@ export default function BookingsPage() {
                       {getStatusBadge(booking.status, booking)}
                     </td>
                     
+                    {/* Cột trạng thái thông báo lưu trú */}
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
+                      {booking.status === 'checked-in' && (
+                        booking.accommodationNotificationSent ? (
+                          <div className="flex flex-col items-center">
+                            <button
+                              onClick={() => {
+                                const details = `📋 Chi tiết thông báo lưu trú:
+                                
+🆔 Mã thông báo: ${booking.accommodationNotificationId || 'Không có'}
+📅 Ngày gửi: ${booking.accommodationNotificationDate ? 
+                  new Date(booking.accommodationNotificationDate).toLocaleString('vi-VN') : 'Không rõ'}
+👥 Số khách đăng ký: ${booking.guestRegistrations?.length || 0}
+🏨 Booking: ${booking._id.slice(-6)} - Phòng ${booking.roomNumber}
+👤 Đại diện: ${booking.representativeName}
+
+${booking.guestRegistrations?.map((guest, index) => `
+👤 Khách ${index + 1}:
+- Tên: ${guest.fullName}
+- CCCD/CMND: ${guest.idNumber}
+- Mục đích: ${guest.purpose}
+`).join('') || ''}
+
+🌐 Portal: https://dichvucong.dancuquocgia.gov.vn/portal/p/home/thong-bao-luu-tru.html`;
+                                
+                                alert(details);
+                              }}
+                              className="text-green-600 hover:text-green-800 text-lg"
+                              title="Xem chi tiết thông báo lưu trú"
+                            >
+                              🏨✅
+                            </button>
+                            <span className="text-xs text-green-600">Đã gửi</span>
+                            {booking.accommodationNotificationDate && (
+                              <span className="text-xs text-gray-500">
+                                {new Date(booking.accommodationNotificationDate).toLocaleDateString('vi-VN')}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center">
+                            <span className="text-orange-600 text-lg">🏨⏳</span>
+                            <span className="text-xs text-orange-600">Chưa gửi</span>
+                          </div>
+                        )
+                      )}
+                      {booking.status !== 'checked-in' && (
+                        <span className="text-gray-400 text-xs">-</span>
+                      )}
+                    </td>
+                    
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         {canCheckIn(booking) && (
@@ -645,6 +716,35 @@ export default function BookingsPage() {
                               💰
                             </button>
                           </>
+                        )}
+                        {booking.status === 'checked-in' && !booking.accommodationNotificationSent && (
+                          <button
+                            onClick={() => {
+                              // Tạo guest mặc định từ thông tin booking với đầy đủ thông tin
+                              const initialGuests = [{
+                                fullName: booking.representativeName,
+                                dateOfBirth: booking.representativeDateOfBirth || '',
+                                idNumber: booking.representativeCCCD || '',
+                                idType: 'cccd' as const,
+                                nationality: 'Việt Nam',
+                                address: booking.representativeAddress || '',
+                                phoneNumber: booking.representativePhone,
+                                checkInDate: booking.actualCheckIn ? 
+                                  new Date(booking.actualCheckIn).toISOString().split('T')[0] :
+                                  new Date().toISOString().split('T')[0],
+                                estimatedCheckOutDate: booking.checkOutDate ? 
+                                  new Date(booking.checkOutDate).toISOString().split('T')[0] : '',
+                                purpose: 'tourism' as const,
+                                otherPurpose: ''
+                              }];
+                              
+                              guestRegistration.openModal(booking._id, initialGuests);
+                            }}
+                            className="text-orange-600 hover:text-orange-900 text-xs bg-orange-50 px-2 py-1 rounded"
+                            title="Gửi thông báo lưu trú"
+                          >
+                            🏨
+                          </button>
                         )}
                         <button 
                           onClick={() => setSelectedBookingDetail(booking)}
@@ -957,6 +1057,18 @@ export default function BookingsPage() {
           </div>
         </div>
       )}
+
+      {/* Guest Registration Modal */}
+      <GuestRegistrationModal
+        isOpen={guestRegistration.state.isOpen}
+        guests={guestRegistration.state.guests}
+        isSubmitting={guestRegistration.state.isSubmitting}
+        onClose={guestRegistration.closeModal}
+        onUpdateGuest={guestRegistration.updateGuest}
+        onAddGuest={guestRegistration.addGuest}
+        onRemoveGuest={guestRegistration.removeGuest}
+        onSubmit={guestRegistration.submitRegistration}
+      />
     </div>
   );
 }

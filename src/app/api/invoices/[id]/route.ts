@@ -1,106 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { Invoice } from '@/lib/models';
+import { getInvoiceById, updateInvoice, deleteInvoice } from '@/lib/services/invoice.service';
+import { UpdateInvoiceSchema } from '@/lib/schemas';
+import { requireAuth, withErrorHandling } from '@/lib/auth-middleware';
 
-// Lấy thông tin hóa đơn
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
-    
-    const invoice = await Invoice.findById(params.id)
-      .populate('bookingId')
-      .populate('customerId')
-      .populate('serviceIds');
-    
-    if (!invoice) {
-      return NextResponse.json(
-        { success: false, message: 'Không tìm thấy hóa đơn' },
-        { status: 404 }
-      );
-    }
-    
-    return NextResponse.json({
-      success: true,
-      data: invoice
-    });
-    
-  } catch (error) {
-    console.error('Get invoice error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Lỗi khi lấy thông tin hóa đơn' },
-      { status: 500 }
-    );
-  }
+interface RouteParams {
+  params: { id: string };
 }
 
-// Cập nhật hóa đơn
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+// GET /api/invoices/[id] - Get invoice by ID
+export const GET = withErrorHandling(
+  requireAuth(['admin', 'manager', 'staff'])(async (request: NextRequest, user: any, { params }: RouteParams) => {
     await connectDB();
-    
-    const updateData = await request.json();
-    
-    const invoice = await Invoice.findByIdAndUpdate(
-      params.id,
-      { ...updateData, updatedAt: new Date() },
-      { new: true }
-    ).populate('bookingId').populate('customerId').populate('serviceIds');
-    
-    if (!invoice) {
-      return NextResponse.json(
-        { success: false, message: 'Không tìm thấy hóa đơn' },
-        { status: 404 }
-      );
-    }
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Cập nhật hóa đơn thành công',
-      data: invoice
-    });
-    
-  } catch (error) {
-    console.error('Update invoice error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Lỗi khi cập nhật hóa đơn' },
-      { status: 500 }
-    );
-  }
-}
 
-// Xóa hóa đơn
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+    const invoice = await getInvoiceById(params.id);
+
+    return NextResponse.json(
+      { success: true, data: invoice },
+      { status: 200 }
+    );
+  })
+);
+
+// PUT /api/invoices/[id] - Update invoice
+export const PUT = withErrorHandling(
+  requireAuth(['admin', 'manager'])(async (request: NextRequest, user: any, { params }: RouteParams) => {
     await connectDB();
+
+    const body = await request.json();
+    const parsed = UpdateInvoiceSchema.safeParse(body);
     
-    const invoice = await Invoice.findByIdAndDelete(params.id);
-    
-    if (!invoice) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { success: false, message: 'Không tìm thấy hóa đơn' },
-        { status: 404 }
+        { 
+          success: false, 
+          error: 'Invalid request data',
+          details: parsed.error.issues 
+        },
+        { status: 400 }
       );
     }
+
+    const data = { ...parsed.data };
     
-    return NextResponse.json({
-      success: true,
-      message: 'Xóa hóa đơn thành công'
-    });
-    
-  } catch (error) {
-    console.error('Delete invoice error:', error);
+    // Convert date string to Date object
+    if (data.dueDate) {
+      data.dueDate = new Date(data.dueDate) as any;
+    }
+
+    const invoice = await updateInvoice(params.id, data as any);
+
     return NextResponse.json(
-      { success: false, message: 'Lỗi khi xóa hóa đơn' },
-      { status: 500 }
+      { success: true, data: invoice },
+      { status: 200 }
     );
-  }
-}
+  })
+);
+
+// DELETE /api/invoices/[id] - Delete invoice
+export const DELETE = withErrorHandling(
+  requireAuth(['admin', 'manager'])(async (request: NextRequest, user: any, { params }: RouteParams) => {
+    await connectDB();
+
+    await deleteInvoice(params.id);
+
+    return NextResponse.json(
+      { success: true, message: 'Invoice deleted successfully' },
+      { status: 200 }
+    );
+  })
+);

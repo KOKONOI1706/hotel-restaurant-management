@@ -4,13 +4,16 @@ import { Room, Booking } from '@/lib/models';
 /**
  * Tự động đồng bộ trạng thái phòng dựa trên booking
  */
-export async function syncRoomStatus(roomId: string) {
+export async function syncRoomStatus(roomId: string | any) {
   try {
     await connectDB();
     
-    const room = await Room.findById(roomId);
+    // Đảm bảo roomId là string
+    const roomIdStr = typeof roomId === 'string' ? roomId : roomId._id || roomId.toString();
+    
+    const room = await Room.findById(roomIdStr);
     if (!room) {
-      console.error(`Room not found: ${roomId}`);
+      console.error(`Room not found: ${roomIdStr}`);
       return;
     }
     
@@ -19,7 +22,7 @@ export async function syncRoomStatus(roomId: string) {
     // Tìm booking active cho phòng này
     // Ưu tiên: checked-in > confirmed > pending
     const checkedInBooking = await Booking.findOne({
-      roomId: roomId,
+      roomId: roomIdStr,
       status: 'checked-in'
     }).sort({ createdAt: -1 });
     
@@ -28,7 +31,7 @@ export async function syncRoomStatus(roomId: string) {
     } else {
       // Kiểm tra booking đã confirm nhưng chưa check-in
       const confirmedBooking = await Booking.findOne({
-        roomId: roomId,
+        roomId: roomIdStr,
         status: 'confirmed'
       }).sort({ createdAt: -1 });
       
@@ -39,7 +42,7 @@ export async function syncRoomStatus(roomId: string) {
     
     // Cập nhật nếu status không đúng
     if (room.status !== correctStatus) {
-      await Room.findByIdAndUpdate(roomId, { status: correctStatus });
+      await Room.findByIdAndUpdate(roomIdStr, { status: correctStatus });
       console.log(`Auto-synced room ${room.roomNumber}: ${room.status} → ${correctStatus}`);
       return { updated: true, oldStatus: room.status, newStatus: correctStatus };
     }

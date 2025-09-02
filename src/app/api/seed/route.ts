@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         checkInDate: new Date('2025-08-30T14:00:00'),
         checkOutDate: new Date('2025-09-01T12:00:00'),
         totalAmount: 1000000,
-        status: 'pending',
+        status: 'confirmed',
         notes: 'Booking cuối tuần',
         createdBy: 'admin'
       },

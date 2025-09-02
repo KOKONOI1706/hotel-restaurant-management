@@ -1,114 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import { Room, Booking } from '@/lib/models';
-import { startOfMonth, endOfMonth, startOfYear, endOfYear, startOfDay, endOfDay } from 'date-fns';
+import { getDashboardSummary, getRecentBookings, getOccupiedRoomsWithBookings } from '@/lib/services/dashboard.service';
+import { DashboardQuerySchema } from '@/lib/schemas';
+import { requireAuth, withErrorHandling } from '@/lib/auth-middleware';
 
-// GET /api/dashboard - Get dashboard statistics
-export const GET = async (request: NextRequest) => {
-  try {
+// GET /api/dashboard - Legacy endpoint for backward compatibility
+export const GET = withErrorHandling(
+  requireAuth(['admin', 'manager', 'staff'])(async (request: NextRequest) => {
     await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const queryObject = Object.fromEntries(searchParams);
     
-    const today = new Date();
-    const startOfToday = startOfDay(today);
-    const endOfToday = endOfDay(today);
-    const startOfThisMonth = startOfMonth(today);
-    const endOfThisMonth = endOfMonth(today);
-    const startOfThisYear = startOfYear(today);
-    const endOfThisYear = endOfYear(today);
+    const parsed = DashboardQuerySchema.safeParse(queryObject);
+    const { from, to } = parsed.success ? parsed.data : {};
+    
+    const fromDate = from ? new Date(from) : undefined;
+    const toDate = to ? new Date(to) : undefined;
 
-    // Get room statistics
-    const totalRooms = await Room.countDocuments();
-    const availableRooms = await Room.countDocuments({ status: 'available' });
-    const occupiedRooms = await Room.countDocuments({ status: 'occupied' });
-    const maintenanceRooms = await Room.countDocuments({ status: 'maintenance' });
-    const reservedRooms = await Room.countDocuments({ status: 'reserved' });
-    const cleaningRooms = await Room.countDocuments({ status: 'cleaning' });
-
-    // Get booking statistics
-    const totalBookings = await Booking.countDocuments();
-    const todayCheckIns = await Booking.countDocuments({
-      checkInDate: { $gte: startOfToday, $lte: endOfToday },
-      status: 'confirmed'
-    });
-    const todayCheckOuts = await Booking.countDocuments({
-      checkOutDate: { $gte: startOfToday, $lte: endOfToday },
-      status: 'checked-in'
+    // Get summary data
+    const summary = await getDashboardSummary({ 
+      from: fromDate, 
+      to: toDate 
     });
 
-    // Calculate revenue
-    const monthlyBookings = await Booking.find({
-      createdAt: { $gte: startOfThisMonth, $lte: endOfThisMonth },
-      status: { $in: ['confirmed', 'checked-in', 'checked-out'] }
-    });
-    const monthlyRevenue = monthlyBookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+    // Get recent data for legacy compatibility
+    const [recentBookings, occupiedRooms] = await Promise.all([
+      getRecentBookings(5),
+      getOccupiedRoomsWithBookings(10)
+    ]);
 
-    const yearlyBookings = await Booking.find({
-      createdAt: { $gte: startOfThisYear, $lte: endOfThisYear },
-      status: { $in: ['confirmed', 'checked-in', 'checked-out'] }
-    });
-    const yearlyRevenue = yearlyBookings.reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
-
-    // Get recent bookings
-    const recentBookings = await Booking.find()
-      .populate('roomId', 'roomNumber type')
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('bookingType representativeName companyName checkInDate checkOutDate status totalAmount createdAt');
-
-    // Get occupied rooms with booking info
-    const occupiedRoomsWithBookings = await Room.find({ 
-      status: { $in: ['occupied', 'reserved'] } 
-    }).limit(10);
-
-    const occupiedRoomsData = await Promise.all(
-      occupiedRoomsWithBookings.map(async (room) => {
-        const booking = await Booking.findOne({ 
-          roomId: room._id, 
-          status: { $in: ['confirmed', 'checked-in'] }
-        }).sort({ createdAt: -1 });
-        
-        return {
-          _id: room._id,
-          roomNumber: room.roomNumber,
-          type: room.type,
-          status: room.status,
-          booking: booking ? {
-            guestName: booking.bookingType === 'individual' 
-              ? booking.representativeName 
-              : booking.companyName,
-            checkInDate: booking.checkInDate,
-            checkOutDate: booking.checkOutDate,
-            status: booking.status
-          } : null
-        };
-      })
-    );
-
-    // Room status distribution for chart
+    // Format room status data for chart
     const roomStatusData = [
-      { name: 'Trống', value: availableRooms, color: '#10B981' },
-      { name: 'Có khách', value: occupiedRooms, color: '#EF4444' },
-      { name: 'Bảo trì', value: maintenanceRooms, color: '#F59E0B' },
-      { name: 'Đã đặt', value: reservedRooms, color: '#3B82F6' },
-      { name: 'Dọn dẹp', value: cleaningRooms, color: '#8B5CF6' }
+      { name: 'Trống', value: summary.roomStats.availableRooms, color: '#10B981' },
+      { name: 'Có khách', value: summary.roomStats.occupiedRooms, color: '#EF4444' },
+      { name: 'Bảo trì', value: summary.roomStats.maintenanceRooms, color: '#F59E0B' },
+      { name: 'Đã đặt', value: summary.roomStats.reservedRooms, color: '#3B82F6' },
+      { name: 'Dọn dẹp', value: summary.roomStats.cleaningRooms, color: '#8B5CF6' }
     ].filter(item => item.value > 0);
+
+    // Transform data for legacy compatibility
+    const legacyStats = {
+      totalRooms: summary.roomStats.totalRooms,
+      availableRooms: summary.roomStats.availableRooms,
+      occupiedRooms: summary.roomStats.occupiedRooms,
+      maintenanceRooms: summary.roomStats.maintenanceRooms,
+      reservedRooms: summary.roomStats.reservedRooms,
+      cleaningRooms: summary.roomStats.cleaningRooms,
+      totalBookings: summary.bookingStats.totalBookings,
+      todayCheckIns: summary.bookingStats.todayCheckIns,
+      todayCheckOuts: summary.bookingStats.todayCheckOuts,
+      monthlyRevenue: summary.bookingStats.monthlyRevenue,
+      yearlyRevenue: summary.bookingStats.yearlyRevenue,
+    };
 
     return NextResponse.json({
       success: true,
       data: {
-        stats: {
-          totalRooms,
-          availableRooms,
-          occupiedRooms,
-          maintenanceRooms,
-          reservedRooms,
-          cleaningRooms,
-          totalBookings,
-          todayCheckIns,
-          todayCheckOuts,
-          monthlyRevenue,
-          yearlyRevenue,
-        },
+        stats: legacyStats,
         recentBookings: recentBookings.map(booking => ({
           _id: booking._id,
           guestName: booking.bookingType === 'individual' 
@@ -124,15 +73,13 @@ export const GET = async (request: NextRequest) => {
           totalAmount: booking.totalAmount,
           createdAt: booking.createdAt
         })),
-        occupiedRooms: occupiedRoomsData,
+        occupiedRooms,
         roomStatusData
       },
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60'
+      }
     });
-  } catch (error) {
-    console.error('Get dashboard error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-};
+  })
+);

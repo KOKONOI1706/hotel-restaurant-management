@@ -521,7 +521,11 @@ export default function BookingsPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0).toLocaleString('vi-VN')} VND
+                {bookings.reduce((sum, b) => {
+                  // Ưu tiên finalAmount (đã check-out) nếu có, fallback về totalAmount
+                  const amount = b.finalAmount || b.totalAmount || 0;
+                  return sum + amount;
+                }, 0).toLocaleString('vi-VN')} VND
               </div>
               <div className="text-sm text-gray-600">Tổng doanh thu</div>
             </div>

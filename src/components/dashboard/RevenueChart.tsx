@@ -1,22 +1,38 @@
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { RevenueChartData } from '@/lib/services/dashboard';
 
 interface RevenueChartProps {
-  data: Array<{
-    date: string;
-    paidAmount: number;
-    debt: number;
-  }>;
-  isLoading?: boolean;
+  data: RevenueChartData[];
+  loading: boolean;
+  error: string | null;
 }
 
-export default function RevenueChart({ data, isLoading }: RevenueChartProps) {
-  if (isLoading) {
+function LoadingSkeleton() {
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="h-4 bg-gray-200 rounded mb-4 w-1/3 animate-pulse"></div>
+      <div className="h-80 bg-gray-100 rounded animate-pulse"></div>
+    </div>
+  );
+}
+
+export default function RevenueChart({ data, loading, error }: RevenueChartProps) {
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (error) {
     return (
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="h-4 bg-gray-200 rounded mb-4 w-1/3"></div>
-        <div className="h-80 bg-gray-100 rounded animate-pulse"></div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Biểu đồ doanh thu</h3>
+        <div className="h-80 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-2">Error loading chart data</p>
+            <p className="text-sm text-gray-500">{error}</p>
+          </div>
+        </div>
       </div>
     );
   }

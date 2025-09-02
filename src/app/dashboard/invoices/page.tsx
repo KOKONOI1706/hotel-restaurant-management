@@ -30,10 +30,15 @@ export default function InvoicesPage() {
       const data = await response.json();
       
       if (data.success) {
-        setInvoices(data.invoices);
+        // Handle different response structures
+        const invoicesData = data.data?.invoices || data.invoices || [];
+        setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+      } else {
+        setInvoices([]);
       }
     } catch (error) {
       console.error('Error fetching invoices:', error);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -110,7 +115,7 @@ export default function InvoicesPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-center">
             <p className="text-sm font-medium text-gray-600">Tổng hóa đơn</p>
-            <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
+            <p className="text-2xl font-bold text-gray-900">{Array.isArray(invoices) ? invoices.length : 0}</p>
           </div>
         </div>
         
@@ -118,7 +123,7 @@ export default function InvoicesPage() {
           <div className="text-center">
             <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
             <p className="text-2xl font-bold text-blue-600">
-              {(invoices.reduce((sum, inv) => sum + inv.totalAmount, 0) / 1000000).toFixed(1)}M
+              {((Array.isArray(invoices) ? invoices.reduce((sum, inv) => sum + inv.totalAmount, 0) : 0) / 1000000).toFixed(1)}M
             </p>
           </div>
         </div>
@@ -127,7 +132,7 @@ export default function InvoicesPage() {
           <div className="text-center">
             <p className="text-sm font-medium text-gray-600">Đã thu</p>
             <p className="text-2xl font-bold text-green-600">
-              {(invoices.reduce((sum, inv) => sum + inv.paidAmount, 0) / 1000000).toFixed(1)}M
+              {((Array.isArray(invoices) ? invoices.reduce((sum, inv) => sum + inv.paidAmount, 0) : 0) / 1000000).toFixed(1)}M
             </p>
           </div>
         </div>
@@ -136,7 +141,7 @@ export default function InvoicesPage() {
           <div className="text-center">
             <p className="text-sm font-medium text-gray-600">Còn nợ</p>
             <p className="text-2xl font-bold text-red-600">
-              {(invoices.reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0) / 1000000).toFixed(1)}M
+              {((Array.isArray(invoices) ? invoices.reduce((sum, inv) => sum + (inv.totalAmount - inv.paidAmount), 0) : 0) / 1000000).toFixed(1)}M
             </p>
           </div>
         </div>
@@ -153,7 +158,7 @@ export default function InvoicesPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="mt-2 text-gray-600">Đang tải...</p>
           </div>
-        ) : invoices.length === 0 ? (
+        ) : !Array.isArray(invoices) || invoices.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
             Không tìm thấy hóa đơn nào
           </div>
@@ -186,7 +191,7 @@ export default function InvoicesPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {invoices.map((invoice) => (
+                {Array.isArray(invoices) && invoices.map((invoice) => (
                   <tr key={invoice._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

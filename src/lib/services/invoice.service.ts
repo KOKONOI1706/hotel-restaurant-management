@@ -16,10 +16,16 @@ export interface InvoiceFilter {
 export interface PaginatedInvoices {
   invoices: any[];
   pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+  totals: {
+    totalAmount: number;
+    totalPaid: number;
+    pageAmount: number;
+    pagePaid: number;
   };
 }
 
@@ -105,13 +111,29 @@ export async function getInvoicesWithFilter(filter: InvoiceFilter): Promise<Pagi
     Invoice.countDocuments(query)
   ]);
 
+  // Calculate totals
+  const pageInvoices = invoices;
+  const pageAmount = pageInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+  const pagePaid = pageInvoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+  
+  // Get grand totals (all invoices matching the filter)
+  const allInvoices = await Invoice.find(query).select('totalAmount paidAmount').lean();
+  const totalAmount = allInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
+  const totalPaid = allInvoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+
   return {
     invoices,
     pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit)
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+      itemsPerPage: limit
+    },
+    totals: {
+      totalAmount,
+      totalPaid,
+      pageAmount,
+      pagePaid
     }
   };
 }

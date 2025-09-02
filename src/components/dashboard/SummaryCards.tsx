@@ -1,46 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { DashboardSummary } from '@/lib/services/dashboard';
 import { 
   DocumentTextIcon, 
   CurrencyDollarIcon, 
   ExclamationTriangleIcon,
-  CheckCircleIcon 
+  CheckCircleIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 
 interface SummaryCardsProps {
-  summary: {
-    totals: {
-      totalInvoices: number;
-      totalAmount: number;
-      paidAmount: number;
-      debt: number;
-    };
-    statusCounts: {
-      paid: number;
-      pending: number;
-      partial: number;
-      refunded: number;
-    };
-  };
-  isLoading?: boolean;
+  summary: DashboardSummary | null;
+  loading: boolean;
+  error: string | null;
 }
 
-export default function SummaryCards({ summary, isLoading }: SummaryCardsProps) {
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow p-6 animate-pulse">
-            <div className="flex items-center">
-              <div className="bg-gray-200 p-3 rounded-lg w-12 h-12"></div>
-              <div className="ml-4 flex-1">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded"></div>
-              </div>
+function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white p-6 rounded-lg shadow animate-pulse">
+          <div className="flex items-center">
+            <div className="bg-gray-200 p-3 rounded-lg w-12 h-12"></div>
+            <div className="ml-4 flex-1">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
             </div>
           </div>
-        ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function SummaryCards({ summary, loading, error }: SummaryCardsProps) {
+  if (loading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-red-600">Error loading summary: {error}</p>
+      </div>
+    );
+  }
+
+  if (!summary) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+        <p className="text-gray-500">No summary data available</p>
       </div>
     );
   }
@@ -61,16 +70,16 @@ export default function SummaryCards({ summary, isLoading }: SummaryCardsProps) 
       textColor: 'text-green-600',
     },
     {
-      name: 'Còn nợ',
+      name: 'Công nợ',
       value: `${summary.totals.debt.toLocaleString('vi-VN')} VND`,
       icon: ExclamationTriangleIcon,
-      color: 'bg-red-500',
-      textColor: 'text-red-600',
+      color: 'bg-orange-500',
+      textColor: 'text-orange-600',
     },
     {
-      name: 'Tổng tiền',
-      value: `${summary.totals.totalAmount.toLocaleString('vi-VN')} VND`,
-      icon: CurrencyDollarIcon,
+      name: 'Phòng khả dụng',
+      value: `${summary.roomStats?.availableRooms || 0}/${summary.roomStats?.totalRooms || 0}`,
+      icon: BuildingOfficeIcon,
       color: 'bg-purple-500',
       textColor: 'text-purple-600',
     },
@@ -108,10 +117,10 @@ interface StatusBadgesProps {
 
 export function StatusBadges({ statusCounts }: StatusBadgesProps) {
   const statuses = [
-    { key: 'paid', label: 'Đã thanh toán', count: statusCounts.paid, color: 'bg-green-100 text-green-800' },
-    { key: 'pending', label: 'Chờ thanh toán', count: statusCounts.pending, color: 'bg-yellow-100 text-yellow-800' },
-    { key: 'partial', label: 'Thanh toán một phần', count: statusCounts.partial, color: 'bg-blue-100 text-blue-800' },
-    { key: 'refunded', label: 'Đã hoàn tiền', count: statusCounts.refunded, color: 'bg-gray-100 text-gray-800' },
+    { key: 'paid', label: 'Đã thanh toán', count: statusCounts.paid, color: 'bg-green-100 text-green-800 border border-green-200' },
+    { key: 'pending', label: 'Chờ thanh toán', count: statusCounts.pending, color: 'bg-yellow-100 text-yellow-800 border border-yellow-200' },
+    { key: 'partial', label: 'Thanh toán một phần', count: statusCounts.partial, color: 'bg-orange-100 text-orange-800 border border-orange-200' },
+    { key: 'refunded', label: 'Đã hoàn tiền', count: statusCounts.refunded, color: 'bg-red-100 text-red-800 border border-red-200' },
   ];
 
   return (

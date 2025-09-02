@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useInvoices } from '@/hooks/useInvoices';
 import { InvoiceFilter } from '@/lib/services/invoices';
+import { DashboardFilter } from '@/lib/services/dashboard';
 import SummaryCards, { StatusBadges } from '@/components/dashboard/SummaryCards';
 import RevenueChart from '@/components/dashboard/RevenueChart';
 import AdvancedFilters from '@/components/dashboard/AdvancedFilters';
@@ -55,8 +56,16 @@ export default function DashboardPage() {
     setFilter(newFilter);
     loadInvoices(1, 10, newFilter);
     
-    // Update summary with filter (currently refreshSummary doesn't support filters)
-    refreshSummary();
+    // Update summary with filter
+    if (newFilter.from || newFilter.to) {
+      const dashboardFilter: DashboardFilter = { 
+        from: newFilter.from, 
+        to: newFilter.to 
+      };
+      refreshSummary(dashboardFilter);
+    } else {
+      refreshSummary();
+    }
   };
 
   const handleClearFilters = () => {

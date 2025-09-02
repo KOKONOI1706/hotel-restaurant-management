@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   StarIcon,
@@ -52,7 +52,7 @@ export default function CustomerServicesPage() {
   }, []);
 
   // Fetch services from API - giống như trang admin
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -85,13 +85,13 @@ export default function CustomerServicesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (isClient) {
       fetchServices();
     }
-  }, [isClient, selectedCategory]);
+  }, [isClient, fetchServices]);
 
   // Helper functions cho customer view
   const getDefaultDuration = (category: string): number => {

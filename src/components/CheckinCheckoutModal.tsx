@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import GuestRegistrationModal, { Guest } from './GuestRegistrationModal';
 
 interface CheckinCheckoutModalProps {
@@ -29,15 +29,9 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
   });
 
   // Tính tiền thời gian thực khi mở modal checkout
-  useEffect(() => {
-    if (type === 'checkout') {
-      calculateRealTimeAmount();
-      // Khởi tạo custom amount bằng với total amount
-      setCustomAmount(booking.totalAmount);
-    }
-  }, [type, booking._id, booking.totalAmount]);
-
-  const calculateRealTimeAmount = async () => {
+  const calculateRealTimeAmount = useCallback(async () => {
+    if (!booking._id) return;
+    
     try {
       setLoadingRealTime(true);
       const response = await fetch(`/api/bookings/${booking._id}/calculate-real-amount`, {
@@ -59,7 +53,15 @@ export default function CheckinCheckoutModal({ booking, type, onClose, onSuccess
     } finally {
       setLoadingRealTime(false);
     }
-  };
+  }, [booking._id]);
+
+  useEffect(() => {
+    if (type === 'checkout') {
+      calculateRealTimeAmount();
+      // Khởi tạo custom amount bằng với total amount
+      setCustomAmount(booking.totalAmount);
+    }
+  }, [type, calculateRealTimeAmount, booking.totalAmount]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

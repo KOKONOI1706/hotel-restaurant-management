@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface Guest {
   fullName: string;
@@ -39,13 +39,9 @@ export default function AccommodationNotificationModal({ booking, isOpen, onClos
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState<any>(null);
 
-  useEffect(() => {
-    if (isOpen && booking) {
-      loadNotificationData();
-    }
-  }, [isOpen, booking]);
-
-  const loadNotificationData = async () => {
+  const loadNotificationData = useCallback(async () => {
+    if (!booking) return;
+    
     try {
       const response = await fetch(`/api/bookings/${booking._id}/accommodation-notification`);
       const result = await response.json();
@@ -61,7 +57,13 @@ export default function AccommodationNotificationModal({ booking, isOpen, onClos
       console.error('Error loading notification data:', error);
       setGuests([createDefaultGuest()]);
     }
-  };
+  }, [booking]);
+
+  useEffect(() => {
+    if (isOpen && booking) {
+      loadNotificationData();
+    }
+  }, [isOpen, loadNotificationData]);
 
   const createDefaultGuest = (): Guest => ({
     fullName: booking.customerName || '',

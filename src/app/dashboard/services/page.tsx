@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ServiceForm from '@/components/ServiceForm';
 import { 
   CogIcon,
@@ -37,7 +37,7 @@ export default function ServicesPage() {
   });
 
   // Fetch services from API
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -60,11 +60,11 @@ export default function ServicesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchServices();
-  }, [filters]);
+  }, [fetchServices]);
 
   const filteredServices = services;
 

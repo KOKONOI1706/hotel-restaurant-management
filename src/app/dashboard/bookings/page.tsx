@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import BookingForm from '@/components/BookingForm';
 import CheckinCheckoutModal from '@/components/CheckinCheckoutModal';
 import GuestRegistrationModal from '@/components/GuestRegistrationModal';
@@ -65,7 +65,7 @@ export default function BookingsPage() {
     dateType: 'checkIn' // 'checkIn', 'checkOut', 'created'
   });
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -87,11 +87,11 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     fetchBookings();
-  }, [filters]);
+  }, [fetchBookings]);
 
   const handleCreateBooking = async (bookingData: any) => {
     try {
